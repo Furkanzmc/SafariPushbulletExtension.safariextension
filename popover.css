@@ -1,0 +1,129 @@
+body {
+    min-width: 250px;
+    width: 100%;
+    margin: 0px 0px;
+    font-family: Segoe UI, Arial, sans-serif;
+    font-size: 13px;
+    background-color: rgb(236, 240, 239);
+}
+
+#logo {
+    position: relative;
+    top: 4px;
+    vertical-align: middle;
+    width: 250px;
+    height: 116px;
+    margin: auto auto;
+    background-repeat: no-repeat;
+    background-image: url("pushbullet.png");
+    background-size: 100%;
+}
+
+header {
+    margin: 0px 0px;
+    height: 55px;
+    background-color: rgb(106, 190, 123);
+}
+
+
+
+input, textarea, select {
+    position: relative;
+    top: 20px;
+    width: 90%;
+    margin-top: 10px;
+
+}
+
+div {
+    text-align: center;
+}
+
+/*footer {
+    text-align: center;
+    margin: 25px 0px;
+    height: 35px;
+    width: auto;
+    background-color: rgb(106, 190, 123);
+}*/
+
+div.footer {
+    background-color: rgb(106, 190, 123);
+    margin-top: 34px;
+    height: 47px;
+}
+
+.pushTypeButton {
+    top: -2px;
+    padding: 0px 0px;
+    margin: 0px 10px;
+    height: 30px;
+    width: 60px;
+    font-size: 17px;
+    color: #34495e;
+    text-decoration: none;
+    text-align: center;
+    opacity: .75;
+    -webkit-transition: all 0.25s ease-in-out;
+    -moz-transition: all 0.25s ease-in-out;
+    -o-transition: all 0.25s ease-in-out;
+    transition: all 0.25s ease-in-out;
+    -webkit-backface-visibility: hidden;
+
+    position: relative;
+    margin-top: 10px;
+}
+
+.pushTypeButton:hover {
+    cursor: pointer;
+    opacity: 1;
+    -webkit-transition: all 0.25s ease-in-out;
+    -moz-transition: all 0.25s ease-in-out;
+    -o-transition: all 0.25s ease-in-out;
+    transition: all 0.25s ease-in-out;
+    -webkit-backface-visibility: hidden;
+}
+
+.btn {
+    border: none;
+    background: #bdc3c7;
+    color: #ffffff;
+    padding: 9px 12px 10px;
+    line-height: 22px;
+    text-decoration: none;
+    text-shadow: none;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-transition: 0.25s;
+    -moz-transition: 0.25s;
+    -o-transition: 0.25s;
+    transition: 0.25s;
+    -webkit-backface-visibility: hidden;
+    background-color: #49b266;
+    display: block;
+    width: 80px;
+    margin-left: 5%;
+}
+
+.btn:hover, .btn:focus {
+    background-color: #cacfd2;
+    color: #ffffff;
+    outline: none;
+    -webkit-transition: 0.25s;
+    -moz-transition: 0.25s;
+    -o-transition: 0.25s;
+    transition: 0.25s;
+    -webkit-backface-visibility: hidden;
+}
+
+.btn:active, .btn.active {
+    background-color: #a1a6a9;
+    color: rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
