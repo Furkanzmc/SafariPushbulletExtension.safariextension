@@ -7,6 +7,11 @@ body {
     background-color: rgb(236, 240, 239);
 }
 
+a {
+    color: green;
+    cursor: pointer;
+}
+
 #logo {
     position: relative;
     top: 4px;
@@ -25,8 +30,6 @@ header {
     background-color: rgb(106, 190, 123);
 }
 
-
-
 input, textarea, select {
     position: relative;
     top: 20px;
@@ -35,22 +38,15 @@ input, textarea, select {
 
 }
 
-div {
+div#pushArea {
     text-align: center;
 }
-
-/*footer {
-    text-align: center;
-    margin: 25px 0px;
-    height: 35px;
-    width: auto;
-    background-color: rgb(106, 190, 123);
-}*/
 
 div.footer {
     background-color: rgb(106, 190, 123);
     margin-top: 34px;
     height: 47px;
+    text-align: center;
 }
 
 .pushTypeButton {
@@ -58,7 +54,7 @@ div.footer {
     padding: 0px 0px;
     margin: 0px 10px;
     height: 30px;
-    width: 60px;
+    width: 70px;
     font-size: 17px;
     color: #34495e;
     text-decoration: none;
@@ -84,7 +80,7 @@ div.footer {
     -webkit-backface-visibility: hidden;
 }
 
-.btn {
+.pushButton {
     border: none;
     background: #bdc3c7;
     color: #ffffff;
@@ -109,7 +105,7 @@ div.footer {
     margin-left: 5%;
 }
 
-.btn:hover, .btn:focus {
+.pushButton:hover, .pushButton:focus {
     background-color: #cacfd2;
     color: #ffffff;
     outline: none;
@@ -120,7 +116,7 @@ div.footer {
     -webkit-backface-visibility: hidden;
 }
 
-.btn:active, .btn.active {
+.pushButton:active, .pushButton.active {
     background-color: #a1a6a9;
     color: rgba(255, 255, 255, 0.75);
     -webkit-box-shadow: none;

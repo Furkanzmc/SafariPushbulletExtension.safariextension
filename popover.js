@@ -7,13 +7,11 @@ var mAPIKey = "";
 
 function settingChanged(event) {
     mAPIKey = event.newValue;
-    console.log(mAPIKey);
 }
 
 function popoverHandler(event) {
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
-    console.log(mAPIKey);
     //Fill out the devices
     document.getElementById("combobox").innerHTML = "";
     document.getElementById("message").value = ""
@@ -48,6 +46,9 @@ function popoverHandler(event) {
             };
         }
     });
+    showPushArea();
+    document.getElementById("link").removeAttribute("hidden");
+    safari.self.height = 430;
     fillLinkSharingFields();
 }
 
@@ -78,7 +79,6 @@ function pushIt() {
                 throw err;
             } else {
                 safari.extension.popovers[0].hide();
-                console.log(res);
             }
         });
     } else {
@@ -91,7 +91,6 @@ function pushIt() {
                 throw err;
             } else {
                 safari.extension.popovers[0].hide();
-                console.log(res);
             }
         });
     };
@@ -113,15 +112,92 @@ function getPushTarget(child) {
 }
 
 function changePushType(element_) {
-    mPushType = element_.getAttribute("id") == "link_type" ? "link" : "note"
-    console.log(mPushType);
-    if (mPushType == "note") {
-        document.getElementById("link").setAttribute("hidden", "false");
-        safari.self.height = 399;
-        removeLinkSharingFields();
+    if (element_.getAttribute("id") == "show_pushes") {
+        fillOutPushList();
+        hidePushArea();
     } else {
-        document.getElementById("link").removeAttribute("hidden");
-        safari.self.height = 430;
-        fillLinkSharingFields();
+        showPushArea();
+        mPushType = element_.getAttribute("id") == "link_type" ? "link" : "note"
+        if (mPushType == "note") {
+            removeLinkSharingFields();
+            document.getElementById("link").setAttribute("hidden", "false");
+            safari.self.height = 399;
+        }
+        if (mPushType == "link") {
+            fillLinkSharingFields();
+            document.getElementById("link").removeAttribute("hidden");
+            safari.self.height = 430;
+        }
     }
+}
+
+function showPushArea() {
+    document.getElementById("pushArea").removeAttribute("hidden");
+    document.getElementById("push_list").setAttribute("hidden", "true");
+}
+
+function hidePushArea() {
+    document.getElementById("pushArea").setAttribute("hidden", "true");
+    document.getElementById("push_list").removeAttribute("hidden");
+    safari.self.height = 474;
+}
+
+function addPushToList(profilePic, senderName, receiverName, title, message, url, pushID) {
+    // <img class="profile-pic" src="{{profile_pic}}"> \
+    var templateHTML = '<div class="push" id="{{push_iden}}"><div class="inner-panel"> \
+            <div class="top-line"> \
+                <div class="small-text"> \
+                    <b>{{sender_name}}</b> sent <b>{{receiver_name}}</b> a link \
+                </div> \
+                <i class="push-close pointer" iden="{{push_iden}}" onclick="removePush(this)"></i> \
+                <i class="push-share pointer"></i> \
+            </div> \
+            <div class="panel"> \
+                <div class="title">{{push_title}}</div> \
+                <div class="text">{{push_message}}</div> \
+                <div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url}}</a></div> \
+            </div> \
+        </div> </div>\ ';
+
+    var temp = templateHTML;
+    // temp = temp.replace("{{profile_pic}}", profilePic);
+    temp = temp.replace("{{push_iden}}", pushID);
+    temp = temp.replace("{{push_iden}}", pushID);
+    temp = temp.replace("{{sender_name}}", senderName);
+    temp = temp.replace("{{receiver_name}}", receiverName);
+    temp = temp.replace("{{push_title}}", title == null ? "" : title);
+    temp = temp.replace("{{push_message}}", message == null ? "" : message);
+    temp = temp.replace("{{push_url}}", url == null ? "" : url);
+    temp = temp.replace("{{push_url}}", url == null ? "" : url);
+    document.getElementById("push_list").innerHTML += temp;
+}
+
+function removePush(maybe) {
+    console.log("SAIL!");
+    var pushID = maybe.getAttribute("iden");
+    PushBullet.APIKey = "v1NETDRZc44VyH7xOZHqxbhbrro0P4MhZZujxJoYvihTU";
+    console.log(PushBullet.deletePush(pushID));
+    document.getElementById("push_list").childNodes[pushID].remove();
+}
+
+function fillOutPushList() {
+    document.getElementById("push_list").innerHTML = "";
+    PushBullet.APIKey = "v1NETDRZc44VyH7xOZHqxbhbrro0P4MhZZujxJoYvihTU";
+    PushBullet.pushHistory(function(err, res) {
+        if (err) {
+            throw err;
+        } else {
+            var pushes = res.pushes.reverse();
+            for (var i = pushes.length - 1; i >= 0; i--) {
+                if (pushes[i].active) {
+                    addPushToList(null, pushes[i].sender_name, pushes[i].receiver_email, pushes[i].title, pushes[i].body, pushes[i].url, pushes[i].iden);
+                }
+            }
+        }
+    });
+}
+
+function openLink(element_) {
+    console.log(element_.getAttribute("href"));
+    safari.application.activeBrowserWindow.openTab().url = element_.getAttribute("href");
 }

@@ -1,0 +1,135 @@
+#push_list {
+    margin-top: 18px;
+    margin-bottom: -10px;
+    overflow-y: scroll;
+    height:330px;
+    width: 95%;
+    margin-left: 10px;
+}
+
+.push {
+    position: relative;
+    margin-bottom: 10px;
+    background: white;
+    font-size: 10px;
+    overflow: hidden;
+    min-height: 60px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    border: 1px solid #ced1d5;
+}
+
+.push .top-line {
+    overflow: hidden;
+}
+
+.push .top-line .profile-pic {
+    float: left;
+    margin-left: 12px;
+    margin-top: 10px;
+    width: 32px;
+    height: 32px;
+    -webkit-border-radius: 16px;
+    -moz-border-radius: 16px;
+    border-radius: 16px;
+}
+
+.push .top-line .small-text {
+    float: left;
+    margin: 19px 10px 0px 10px;
+    color: #ced1d5;
+    font-size: 10px;
+}
+
+.push .top-line .date {
+    float: right;
+    margin: 19px 10px 0px 10px;
+    color: #ced1d5;
+    font-size: 10px;
+}
+
+.push .top-line .push-close {
+    float: right;
+    color: #ced1d5;
+    margin: 17px 17px 14px 6px;
+    font-size: 10px;
+}
+
+.push .top-line .push-close:hover {
+    color: #e74c3c;
+}
+
+.push-close {
+    cursor: pointer;
+    content: url("http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png");
+}
+
+.push .top-line .push-share {
+    float: right;
+    color: #ced1d5;
+    margin: 17px 6px 0px 10px;
+    font-size: 10px;
+}
+
+.push .top-line .push-share:hover {
+    color: #49b266;
+}
+
+.push .panel {
+    padding: 7px 14px 14px 14px;
+    font-size: 15px;
+}
+
+.push .panel .title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.push .panel .text {
+    margin-bottom: 10px;
+}
+
+.push .panel .text a {
+    word-break: break-all;
+}
+
+.push .panel .text:last-child {
+    margin-bottom: 0px;
+}
+
+.push .panel .checkbox {
+    line-height: 24px;
+    margin: 3px;
+}
+
+.push .panel .checkbox .square {
+    margin-right: 10px;
+}
+
+.push .inner-panel {
+    width: 100%;
+    height: 60%;
+}
+
+.push.gradient {
+    color: white;
+    border-style: none;
+}
+
+.push.gradient .inner-panel {
+    min-height: 50px;
+    background: -moz-linear-gradient(top, rgba(1, 3, 5, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(1, 3, 5, 0.8)), color-stop(100%, rgba(0, 0, 0, 0)));
+    /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, rgba(1, 3, 5, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, rgba(1, 3, 5, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, rgba(1, 3, 5, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    /* IE10+ */
+    background: linear-gradient(to bottom, rgba(1, 3, 5, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    /* W3C */
+
+}
