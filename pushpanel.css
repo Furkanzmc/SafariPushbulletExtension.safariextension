@@ -1,3 +1,12 @@
+img {
+    width: 320px;
+    height: 240px;
+}
+
+#img_container {
+    text-align: center;
+}
+
 #push_list {
     margin-top: 18px;
     margin-bottom: -10px;
