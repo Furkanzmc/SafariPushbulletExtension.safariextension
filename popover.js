@@ -175,18 +175,18 @@ function addPushToList(profilePic, senderName, receiverName, title, message, url
 function removePush(maybe) {
     console.log("SAIL!");
     var pushID = maybe.getAttribute("iden");
-    PushBullet.APIKey = "v1NETDRZc44VyH7xOZHqxbhbrro0P4MhZZujxJoYvihTU";
+    PushBullet.APIKey = mAPIKey;
     console.log(PushBullet.deletePush(pushID));
     document.getElementById("push_list").childNodes[pushID].remove();
 }
 
 function fillOutPushList() {
-    document.getElementById("push_list").innerHTML = "";
-    PushBullet.APIKey = "v1NETDRZc44VyH7xOZHqxbhbrro0P4MhZZujxJoYvihTU";
+    PushBullet.APIKey = mAPIKey;
     PushBullet.pushHistory(function(err, res) {
         if (err) {
             throw err;
         } else {
+            document.getElementById("push_list").innerHTML = "";
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
                 if (pushes[i].active) {
