@@ -69,11 +69,18 @@ function pushIt() {
 
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
+    var listItems = null;
+    if (mPushType == "list") {
+        listItems = message.split('*');
+        listItems.splice(0, 1);
+        console.log(listItems);
+    }
     if (mIsDevice) {
         PushBullet.push(mPushType, mPushTarget, null, {
             title: title,
             url: link,
-            body: message
+            body: message,
+            items: listItems
         }, function(err, res) {
             if (err) {
                 throw err;
@@ -85,7 +92,8 @@ function pushIt() {
         PushBullet.push(mPushType, null, mPushTarget, {
             title: title,
             url: link,
-            body: message
+            body: message,
+            items: listItems
         }, function(err, res) {
             if (err) {
                 throw err;
@@ -117,16 +125,31 @@ function changePushType(element_) {
         hidePushArea();
     } else {
         showPushArea();
-        mPushType = element_.getAttribute("id") == "link_type" ? "link" : "note"
+        switch (element_.getAttribute("id")) {
+            case "link_type":
+                mPushType = "link";
+                break;
+            case "note_type":
+                mPushType = "note";
+                break;
+            case "list_type":
+                mPushType = "list";
+                break;
+        }
+        document.getElementById("message").setAttribute("placeholder", "Message");
         if (mPushType == "note") {
             removeLinkSharingFields();
             document.getElementById("link").setAttribute("hidden", "false");
             safari.self.height = 399;
-        }
-        if (mPushType == "link") {
+        } else if (mPushType == "link") {
             fillLinkSharingFields();
             document.getElementById("link").removeAttribute("hidden");
             safari.self.height = 430;
+        } else if (mPushType == "list") {
+            removeLinkSharingFields();
+            document.getElementById("link").setAttribute("hidden", "false");
+            document.getElementById("message").setAttribute("placeholder", "Start every list item with * (asterisk)");
+            safari.self.height = 399;
         }
     }
 }
@@ -142,7 +165,7 @@ function hidePushArea() {
     safari.self.height = 474;
 }
 
-function addPushToList(profilePic, senderName, receiverName, title, message, url, pushID) {
+function addPushToList(pushObject) {
     // <img class="profile-pic" src="{{profile_pic}}"> \
     var templateHTML = '<div class="push" id="{{push_iden}}"><div class="inner-panel"> \
             <div class="top-line"> \
@@ -155,25 +178,66 @@ function addPushToList(profilePic, senderName, receiverName, title, message, url
             <div class="panel"> \
                 <div class="title">{{push_title}}</div> \
                 <div class="text">{{push_message}}</div> \
-                <div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url}}</a></div> \
+                {{url_part}} \
+                {{list_items}}\
+                {{background_style}}\
             </div> \
         </div> </div>\ ';
 
+    var list = "";
+    //If the incoming push is a list add the check boxes
+    if (pushObject.items != null) {
+        var listTemplate = '<label><input type="checkbox" value="checked" id="squaredThree" name="check" {{is_checked}}/>{{item_text}}</label>\ ';
+        var items = pushObject.items.reverse();
+        for (var i = items.length - 1; i >= 0; i--) {
+            var a = listTemplate.replace('{{item_text}}', items[i].text);
+            a = a.replace('{{is_checked}}', items[i].checked ? "checked" : "");
+            list += a;
+        }
+    };
     var temp = templateHTML;
     // temp = temp.replace("{{profile_pic}}", profilePic);
-    temp = temp.replace("{{push_iden}}", pushID);
-    temp = temp.replace("{{push_iden}}", pushID);
-    temp = temp.replace("{{sender_name}}", senderName);
-    temp = temp.replace("{{receiver_name}}", receiverName);
-    temp = temp.replace("{{push_title}}", title == null ? "" : title);
-    temp = temp.replace("{{push_message}}", message == null ? "" : message);
-    temp = temp.replace("{{push_url}}", url == null ? "" : url);
-    temp = temp.replace("{{push_url}}", url == null ? "" : url);
+    temp = temp.replace("{{list_items}}", list);
+    temp = temp.replace("{{push_iden}}", pushObject.iden);
+    temp = temp.replace("{{push_iden}}", pushObject.iden);
+    temp = temp.replace("{{sender_name}}", pushObject.sender_name);
+    temp = temp.replace("{{receiver_name}}", pushObject.receiver_name);
+    if (pushObject.title == null && pushObject.file_name != null) {
+        temp = temp.replace("{{push_title}}", pushObject.file_name);
+    } else {
+        temp = temp.replace("{{push_title}}", pushObject.title == null ? "" : pushObject.title);
+    }
+
+    temp = temp.replace("{{push_message}}", pushObject.body == null ? "" : pushObject.body);
+    //Check to see if a file is present
+    var urlPart = '<div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url_text}}</a></div>';
+
+    //If no URL exists set the url an empty string so no url shows up
+    var url = "";
+    var urlText = "";
+    if (pushObject.file_url != null) {
+        url = pushObject.file_url;
+        urlText = "Download Here";
+    } else if (pushObject.url != null) {
+        url = pushObject.url;
+        urlText = pushObject.url;
+    }
+    urlPart = urlPart.replace("{{push_url}}", url);
+    temp = temp.replace('{{url_part}}', urlPart.replace("{{push_url_text}}", urlText));
+
+    //If the incoming push is a file add the necessary fields
+    var style = '<div id="img_container"><img src="{{file_url}}"/></div>';
+    if (pushObject.file_type != null && pushObject.file_type.search("image") >= 0) {
+        temp = temp.replace("{{background_style}}", pushObject.file_url == null ? "" : style.replace('{{file_url}}', pushObject.file_url));
+    } else {
+        temp = temp.replace("{{background_style}}", "");
+    }
     document.getElementById("push_list").innerHTML += temp;
 }
 
 function removePush(maybe) {
     var pushID = maybe.getAttribute("iden");
+    //TODO: The server returns bad request error.
     PushBullet.APIKey = mAPIKey;
     PushBullet.deletePush(pushID);
     document.getElementById("push_list").childNodes[pushID].remove();
@@ -189,7 +253,8 @@ function fillOutPushList() {
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
                 if (pushes[i].active) {
-                    addPushToList(null, pushes[i].sender_name, pushes[i].receiver_email, pushes[i].title, pushes[i].body, pushes[i].url, pushes[i].iden);
+                    console.log(pushes[i]);
+                    addPushToList(pushes[i]);
                 }
             }
         }
