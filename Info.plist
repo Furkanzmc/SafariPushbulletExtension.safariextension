@@ -39,7 +39,7 @@
 				<key>Identifier</key>
 				<string>pushbulletPopover</string>
 				<key>Width</key>
-				<real>370</real>
+				<real>400</real>
 			</dict>
 		</array>
 		<key>Toolbar Items</key>
