@@ -1,3 +1,7 @@
+label {
+    display: block;
+}
+
 body {
     min-width: 250px;
     width: 100%;
@@ -30,7 +34,7 @@ header {
     background-color: rgb(106, 190, 123);
 }
 
-input, textarea, select {
+.text_input, textarea, select {
     position: relative;
     top: 20px;
     width: 90%;
@@ -38,11 +42,12 @@ input, textarea, select {
 
 }
 
-div#pushArea {
+#pushArea {
     text-align: center;
+    margin-top: -10px;
 }
 
-div.footer {
+.footer {
     background-color: rgb(106, 190, 123);
     margin-top: 34px;
     height: 47px;
@@ -54,8 +59,8 @@ div.footer {
     padding: 0px 0px;
     margin: 0px 10px;
     height: 30px;
-    width: 70px;
-    font-size: 17px;
+    width: 60px;
+    font-size: 15px;
     color: #34495e;
     text-decoration: none;
     text-align: center;
@@ -81,6 +86,7 @@ div.footer {
 }
 
 .pushButton {
+    margin-top: 20px;
     border: none;
     background: #bdc3c7;
     color: #ffffff;
