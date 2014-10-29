@@ -173,10 +173,9 @@ function addPushToList(profilePic, senderName, receiverName, title, message, url
 }
 
 function removePush(maybe) {
-    console.log("SAIL!");
     var pushID = maybe.getAttribute("iden");
     PushBullet.APIKey = mAPIKey;
-    console.log(PushBullet.deletePush(pushID));
+    PushBullet.deletePush(pushID);
     document.getElementById("push_list").childNodes[pushID].remove();
 }
 
@@ -198,6 +197,5 @@ function fillOutPushList() {
 }
 
 function openLink(element_) {
-    console.log(element_.getAttribute("href"));
     safari.application.activeBrowserWindow.openTab().url = element_.getAttribute("href");
 }
