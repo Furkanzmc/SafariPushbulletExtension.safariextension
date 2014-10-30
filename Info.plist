@@ -7,9 +7,9 @@
 	<key>Builder Version</key>
 	<string>10600.1.25</string>
 	<key>CFBundleDisplayName</key>
-	<string>Pushbullet</string>
+	<string>PushBuddy</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.furkanzmc.pushbullet</string>
+	<string>com.furkanzmc.pushbuddy</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
@@ -22,13 +22,6 @@
 		<real>1048576</real>
 		<key>Global Page</key>
 		<string>global.html</string>
-		<key>Menus</key>
-		<array>
-			<dict>
-				<key>Identifier</key>
-				<string>mainMenu</string>
-			</dict>
-		</array>
 		<key>Popovers</key>
 		<array>
 			<dict>
