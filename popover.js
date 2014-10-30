@@ -4,12 +4,19 @@ var mPushTarget = new String();
 var mIsDevice = true;
 var mPushType = "link";
 var mAPIKey = "";
+var mLastPushTime = null;
 
 function settingChanged(event) {
     mAPIKey = event.newValue;
+    setUpPushStream();
+    testWebSocket();
+    console.log("settingsCahnges");
 }
 
 function popoverHandler(event) {
+    setUpPushStream();
+    testWebSocket();
+    mPushType = "link";
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
     //Fill out the devices
@@ -50,12 +57,16 @@ function popoverHandler(event) {
 
 function fillLinkSharingFields() {
     document.getElementById("title").setAttribute("value", safari.application.activeBrowserWindow.activeTab.title);
+    document.getElementById("title").value = safari.application.activeBrowserWindow.activeTab.title;
     document.getElementById("link").setAttribute("value", safari.application.activeBrowserWindow.activeTab.url);
+    document.getElementById("link").value = safari.application.activeBrowserWindow.activeTab.url;
 }
 
-function removeLinkSharingFields() {
+function hideLinkSharingFields() {
     document.getElementById("title").setAttribute("value", "");
+    document.getElementById("title").value = "";
     document.getElementById("link").setAttribute("value", "");
+    document.getElementById("link").value = "";
 }
 
 function pushIt() {
@@ -63,13 +74,16 @@ function pushIt() {
     var title = document.getElementById("title").value;
     var message = document.getElementById("message").value;
 
+    document.getElementById("link").setAttribute('value', "");
+    document.getElementById("title").setAttribute('value', "");
+    document.getElementById("message").setAttribute('value', "");
+
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
     var listItems = null;
     if (mPushType == "list") {
         listItems = message.split('*');
         listItems.splice(0, 1);
-        console.log(listItems);
     }
     if (mIsDevice) {
         PushBullet.push(mPushType, mPushTarget, null, {
@@ -134,18 +148,18 @@ function changePushType(element_) {
         }
         document.getElementById("message").setAttribute("placeholder", "Message");
         if (mPushType == "note") {
-            removeLinkSharingFields();
             document.getElementById("link").setAttribute("hidden", "false");
             safari.self.height = 399;
+            hideLinkSharingFields();
         } else if (mPushType == "link") {
-            fillLinkSharingFields();
             document.getElementById("link").removeAttribute("hidden");
             safari.self.height = 430;
+            fillLinkSharingFields();
         } else if (mPushType == "list") {
-            removeLinkSharingFields();
             document.getElementById("link").setAttribute("hidden", "false");
             document.getElementById("message").setAttribute("placeholder", "Start every list item with * (asterisk)");
             safari.self.height = 399;
+            hideLinkSharingFields();
         }
     }
 }
@@ -249,7 +263,6 @@ function fillOutPushList() {
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
                 if (pushes[i].active) {
-                    console.log(pushes[i]);
                     addPushToList(pushes[i]);
                 }
             }
@@ -260,3 +273,157 @@ function fillOutPushList() {
 function openLink(element_) {
     safari.application.activeBrowserWindow.openTab().url = element_.getAttribute("href");
 }
+
+function notify(title, body, tag) {
+    // check for notification compatibility
+    if (!window.Notification) {
+        // if browser version is unsupported, be silent
+        return;
+    }
+    // log current permission level
+    // console.log(Notification.permission);
+    // if the user has not been asked to grant or deny notifications from this domain
+    if (Notification.permission === 'default') {
+        Notification.requestPermission(function() {
+            // callback this function once a permission level has been set
+            notify();
+        });
+    }
+    // if the user has granted permission for this domain to send notifications
+    else if (Notification.permission === 'granted') {
+        var n = new Notification(
+            title, {
+                'body': body,
+                // prevent duplicate notifications
+                'tag': tag
+            }
+        );
+        // remove the notification from Notification Center when it is clicked
+        n.onclick = function() {
+            PushBullet.APIKey = mAPIKey;
+            PushBullet.pushHistory(function(err, res) {
+                if (err) {
+                    throw err;
+                } else {
+                    var pushes = res.pushes.reverse();
+                    for (var i = pushes.length - 1; i >= 0; i--) {
+                        if (pushes[i].iden == n.tag && pushes[i].type == "link") {
+                            safari.application.activeBrowserWindow.openTab().url = pushes[i].url;
+                            this.close();
+                            break;
+                        }
+                    }
+                }
+            });
+        };
+        // callback function when the notification is closed
+        n.onclose = function() {
+            console.log('Notification closed');
+        };
+    }
+    // if the user does not want notifications to come from this domain
+    else if (Notification.permission === 'denied') {
+        // be silent
+        return;
+    }
+};
+
+function getLatestPush() {
+    mAPIKey = safari.extension.settings.api_key;
+    PushBullet.APIKey = mAPIKey;
+    PushBullet.pushHistory(mLastPushTime, function(err, res) {
+        if (err) {
+            throw err;
+        } else {
+            var pushes = res.pushes.reverse();
+            for (var i = pushes.length - 1; i >= 0; i--) {
+                if (pushes[i].active) {
+                    var notification = "";
+                    if (pushes[i].body == null) {
+                        notification = pushes[i].url;
+                    } else if (pushes[i].url == null) {
+                        notification = pushes[i].body;
+                    } else if (pushes[i].body != null && pushes[i].url != null) {
+                        notification = pushes[i].body + "\n" + pushes[i].url;
+                    }
+                    notify(pushes[i].title, notification, pushes[i].iden);
+                }
+            }
+            mLastPushTime = pushes[pushes.length - 1].modified;
+        }
+    });
+}
+
+
+
+var wsUriTemplate = "wss://stream.pushbullet.com/websocket/";
+var wsUri = null;
+
+function setUpPushStream() {
+    mAPIKey = safari.extension.settings.api_key;
+    PushBullet.APIKey = mAPIKey;
+    PushBullet.pushHistory(function(err, res) {
+        if (err) {
+            throw err;
+        } else {
+            var pushes = res.pushes.reverse();
+            mLastPushTime = pushes[pushes.length - 1].modified;
+        }
+    });
+    wsUri = wsUriTemplate + mAPIKey;
+}
+
+function init() {
+    setUpPushStream();
+    testWebSocket();
+}
+
+function testWebSocket() {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) {
+        onOpen(evt)
+    };
+    websocket.onclose = function(evt) {
+        onClose(evt)
+    };
+    websocket.onmessage = function(evt) {
+        onMessage(evt)
+    };
+    websocket.onerror = function(evt) {
+        onError(evt)
+    };
+}
+
+function onOpen(evt) {
+    ("CONNECTED");
+    doSend("WebSocket rocks");
+}
+
+function onClose(evt) {
+    writeToScreen("DISCONNECTED");
+}
+
+function onMessage(evt) {
+    //This is where we handle the push
+    var message = JSON.parse(evt.data);
+    writeToScreen(message);
+    if (message.type == "tickle" && message.subtype == "push") {
+        // notify("SUCCESS!", "HEEEYYY!", "asd");
+        getLatestPush();
+    };
+    // websocket.close();
+}
+
+function onError(evt) {
+    writeToScreen(evt.data);
+}
+
+function doSend(message) {
+    // writeToScreen("SENT: " + message);
+    websocket.send(message);
+}
+
+function writeToScreen(message) {
+    console.log(message);
+}
+window.addEventListener("load", init, false);
