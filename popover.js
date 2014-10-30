@@ -19,14 +19,12 @@ function popoverHandler(event) {
         if (err) {
             throw err;
         } else {
-            var index = 0;
             for (var i = res.devices.length - 1; i >= 0; i--) {
                 if (res.devices[i].active == true) {
                     if (i == 0) {
                         mPushTarget = res.devices[i].iden;
                     };
-                    document.getElementById("combobox").innerHTML += "<option iden=\"" + res.devices[i].iden + "\" value=\"" + index + "\">" + res.devices[i].nickname + "</option>";
-                    index++;
+                    document.getElementById("combobox").innerHTML += "<option iden=\"" + res.devices[i].iden + "\" value=\"" + res.devices[i].iden + "\">" + res.devices[i].nickname + "</option>";
                 };
             };
         }
@@ -36,12 +34,10 @@ function popoverHandler(event) {
         if (err) {
             throw err;
         } else {
-            var index = 0;
             for (var i = res.contacts.length - 1; i >= 0; i--) {
                 if (res.contacts[i].active == true) {
-                    document.getElementById("combobox").innerHTML += "<option email=\"" + res.contacts[i].email + "\" value=\"" + index + "\">" + res.contacts[i].name +
+                    document.getElementById("combobox").innerHTML += "<option email=\"" + res.contacts[i].email + "\" value=\"" + res.contacts[i].iden + "\">" + res.contacts[i].name +
                         " - " + res.contacts[i].email + "</option>";
-                    index++;
                 };
             };
         }
