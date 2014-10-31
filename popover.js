@@ -30,6 +30,7 @@ function getUser() {
 }
 
 function popoverHandler(event) {
+    safari.self.height = 430;
     getUser();
     setUpPushStream();
     testWebSocket();
@@ -96,6 +97,10 @@ function pushIt() {
     document.getElementById("link").setAttribute('value', "");
     document.getElementById("title").setAttribute('value', "");
     document.getElementById("message").setAttribute('value', "");
+
+    if (link == "" || link == null) {
+        mPushType = "note";
+    };
 
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
@@ -258,7 +263,6 @@ function addPushToList(pushObject) {
     } else {
         temp = temp.replace("{{push_title}}", pushObject.title == null ? "" : pushObject.title);
     }
-    console.log(Date(pushObject.created));
     temp = temp.replace("{{push_message}}", pushObject.body == null ? "" : pushObject.body);
     //Check to see if a file is present
     var urlPart = '<div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url_text}}</a></div>';
@@ -444,7 +448,7 @@ function onOpen(evt) {
 }
 
 function onClose(evt) {
-    writeToScreen("DISCONNECTED");
+    console.log("DISCONNECTED");
 }
 
 function onMessage(evt) {
@@ -452,7 +456,6 @@ function onMessage(evt) {
     var message = JSON.parse(evt.data);
     writeToScreen(message);
     if (message.type == "tickle" && message.subtype == "push") {
-        // notify("SUCCESS!", "HEEEYYY!", "asd");
         getLatestPush();
     };
     // websocket.close();
@@ -463,10 +466,5 @@ function onError(evt) {
 }
 
 function doSend(message) {
-    // writeToScreen("SENT: " + message);
     websocket.send(message);
-}
-
-function writeToScreen(message) {
-    // console.log(message);
 }
