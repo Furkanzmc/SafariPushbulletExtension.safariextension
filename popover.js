@@ -1,19 +1,36 @@
 safari.application.addEventListener("popover", popoverHandler, true);
 safari.application.addEventListener("change", settingChanged, true);
+window.addEventListener("load", init, false);
+
+
 var mPushTarget = new String();
 var mIsDevice = true;
 var mPushType = "link";
 var mAPIKey = "";
 var mLastPushTime = null;
+var mUser = null;
+var mContacts = null;
 
 function settingChanged(event) {
     mAPIKey = event.newValue;
     setUpPushStream();
     testWebSocket();
-    console.log("settingsCahnges");
+}
+
+function getUser() {
+    mAPIKey = safari.extension.settings.api_key
+    PushBullet.APIKey = mAPIKey;
+    PushBullet.user(function(err, res) {
+        if (err) {
+            throw err;
+        } else {
+            mUser = res;
+        }
+    });
 }
 
 function popoverHandler(event) {
+    getUser();
     setUpPushStream();
     testWebSocket();
     mPushType = "link";
@@ -34,6 +51,7 @@ function popoverHandler(event) {
                     document.getElementById("combobox").innerHTML += "<option iden=\"" + res.devices[i].iden + "\" value=\"" + res.devices[i].iden + "\">" + res.devices[i].nickname + "</option>";
                 };
             };
+            getPushTarget(document.getElementById("combobox"));
         }
     });
     //Fill out the contacts
@@ -47,6 +65,7 @@ function popoverHandler(event) {
                         " - " + res.contacts[i].email + "</option>";
                 };
             };
+            getPushTarget(document.getElementById("combobox"));
         }
     });
     showPushArea();
@@ -175,15 +194,36 @@ function hidePushArea() {
     safari.self.height = 474;
 }
 
+function removePush(maybe) {
+    var pushID = maybe.getAttribute("iden");
+    //TODO: The server returns bad request error.
+    PushBullet.APIKey = mAPIKey;
+    PushBullet.deletePush(pushID);
+    document.getElementById("push_list").childNodes[pushID].remove();
+}
+
+function getContactName(contactEmail) {
+    if (contactEmail == mUser.email) {
+        return "yourself";
+    };
+    for (var i = 0; i < mContacts.length; i++) {
+        if (mContacts[i].active == false) {
+            continue;
+        };
+        if (mContacts[i].email == contactEmail) {
+            return mContacts[i].name;
+        };
+    };
+}
+
 function addPushToList(pushObject) {
     // <img class="profile-pic" src="{{profile_pic}}"> \
     var templateHTML = '<div class="push" id="{{push_iden}}"><div class="inner-panel"> \
             <div class="top-line"> \
                 <div class="small-text"> \
-                    <b>{{sender_name}}</b> sent <b>{{receiver_name}}</b> a link \
+                    <b>{{sender_name}}</b> sent <b>{{receiver_name}}</b> a {{push_type}} \
                 </div> \
                 <i class="push-close pointer" iden="{{push_iden}}" onclick="removePush(this)"></i> \
-                <i class="push-share pointer"></i> \
             </div> \
             <div class="panel"> \
                 <div class="title">{{push_title}}</div> \
@@ -208,16 +248,17 @@ function addPushToList(pushObject) {
     var temp = templateHTML;
     // temp = temp.replace("{{profile_pic}}", profilePic);
     temp = temp.replace("{{list_items}}", list);
+    temp = temp.replace("{{push_type}}", pushObject.type);
     temp = temp.replace("{{push_iden}}", pushObject.iden);
     temp = temp.replace("{{push_iden}}", pushObject.iden);
-    temp = temp.replace("{{sender_name}}", pushObject.sender_name);
-    temp = temp.replace("{{receiver_name}}", pushObject.receiver_name);
+    temp = temp.replace("{{sender_name}}", pushObject.sender_name == mUser.name ? "You" : pushObject.sender_name);
+    temp = temp.replace("{{receiver_name}}", getContactName(pushObject.receiver_email));
     if (pushObject.title == null && pushObject.file_name != null) {
         temp = temp.replace("{{push_title}}", pushObject.file_name);
     } else {
         temp = temp.replace("{{push_title}}", pushObject.title == null ? "" : pushObject.title);
     }
-
+    console.log(Date(pushObject.created));
     temp = temp.replace("{{push_message}}", pushObject.body == null ? "" : pushObject.body);
     //Check to see if a file is present
     var urlPart = '<div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url_text}}</a></div>';
@@ -243,14 +284,6 @@ function addPushToList(pushObject) {
         temp = temp.replace("{{background_style}}", "");
     }
     document.getElementById("push_list").innerHTML += temp;
-}
-
-function removePush(maybe) {
-    var pushID = maybe.getAttribute("iden");
-    //TODO: The server returns bad request error.
-    PushBullet.APIKey = mAPIKey;
-    PushBullet.deletePush(pushID);
-    document.getElementById("push_list").childNodes[pushID].remove();
 }
 
 function fillOutPushList() {
@@ -313,6 +346,7 @@ function notify(title, body, tag) {
                             break;
                         }
                     }
+                    this.close();
                 }
             });
         };
@@ -338,6 +372,9 @@ function getLatestPush() {
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
                 if (pushes[i].active) {
+                    if (pushes[i].sender_email == mUser.email) {
+                        continue;
+                    }
                     var notification = "";
                     if (pushes[i].body == null) {
                         notification = pushes[i].url;
@@ -362,6 +399,13 @@ var wsUri = null;
 function setUpPushStream() {
     mAPIKey = safari.extension.settings.api_key;
     PushBullet.APIKey = mAPIKey;
+    PushBullet.contacts(function(error, res) {
+        if (error) {
+            throw error;
+        } else {
+            mContacts = res.contacts;
+        }
+    });
     PushBullet.pushHistory(function(err, res) {
         if (err) {
             throw err;
@@ -424,6 +468,5 @@ function doSend(message) {
 }
 
 function writeToScreen(message) {
-    console.log(message);
+    // console.log(message);
 }
-window.addEventListener("load", init, false);
