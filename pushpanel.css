@@ -10,10 +10,10 @@ img {
 #push_list {
     margin-top: 18px;
     margin-bottom: -10px;
-    overflow-y: scroll;
+    overflow-y: auto;
     height:330px;
     width: 95%;
-    margin-left: 10px;
+    margin-left: 17px;
 }
 
 .push {
@@ -46,9 +46,9 @@ img {
 
 .push .top-line .small-text {
     float: left;
-    margin: 19px 10px 0px 10px;
+    margin: 10px 0px 0px 10px;
     color: #ced1d5;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .push .top-line .date {
@@ -61,7 +61,7 @@ img {
 .push .top-line .push-close {
     float: right;
     color: #ced1d5;
-    margin: 17px 17px 14px 6px;
+    margin: 10px 17px 14px 6px;
     font-size: 10px;
 }
 
@@ -88,6 +88,10 @@ img {
 .push .panel {
     padding: 7px 14px 14px 14px;
     font-size: 15px;
+}
+
+.title {
+    margin-top: -20px;
 }
 
 .push .panel .title {
