@@ -11,6 +11,25 @@ var mLastPushTime = null;
 var mUser = null;
 var mContacts = null;
 var mWebSocketConnected = false;
+var mHasError = false;
+var CHANGE_IN_SIZE = 1;
+
+function showError(error) {
+    if (mHasError == false) {
+        document.getElementById("error_container").removeAttribute("hidden");
+        document.getElementById("error_label").innerText = mWebSocketConnected == false ? "Check your connection" : error.message;
+        mHasError = true;
+        safari.self.height += CHANGE_IN_SIZE;
+    }
+}
+
+function hideErrorLabel() {
+    if (mHasError) {
+        document.getElementById("error_container").setAttribute("hidden", "true");
+        safari.self.height -= CHANGE_IN_SIZE;
+        mHasError = false;
+    }
+}
 
 function settingChanged(event) {
     mAPIKey = event.newValue;
@@ -25,10 +44,18 @@ function getUser() {
 }
 
 function popoverHandler(event) {
+    if (mWebSocketConnected == false) {
+        init();
+        return;
+    }
     if (mUser == null) {
         getUser();
     }
-    safari.self.height = 430;
+    if (mHasError) {
+        safari.self.height = 430 + CHANGE_IN_SIZE;
+    } else {
+        safari.self.height = 430;
+    }
     mPushType = "link";
     mAPIKey = safari.extension.settings.api_key;
     PushBullet.APIKey = mAPIKey;
@@ -37,7 +64,7 @@ function popoverHandler(event) {
     document.getElementById("message").value = "";
     PushBullet.devices(function(err, res) {
         if (err) {
-            throw err;
+            showError(err);
         } else {
             for (var i = res.devices.length - 1; i >= 0; i--) {
                 if (res.devices[i].active == true) {
@@ -48,12 +75,13 @@ function popoverHandler(event) {
                 }
             }
             getPushTarget(document.getElementById("combobox"));
+            hideErrorLabel();
         }
     });
     //Fill out the contacts
     PushBullet.contacts(function(err, res) {
         if (err) {
-            throw err;
+            showError(err);
         } else {
             for (var i = res.contacts.length - 1; i >= 0; i--) {
                 if (res.contacts[i].active == true) {
@@ -62,11 +90,16 @@ function popoverHandler(event) {
                 }
             }
             getPushTarget(document.getElementById("combobox"));
+            hideErrorLabel();
         }
     });
     showPushArea();
     document.getElementById("link").removeAttribute("hidden");
-    safari.self.height = 430;
+    if (mHasError) {
+        safari.self.height = 430 + CHANGE_IN_SIZE;
+    } else {
+        safari.self.height = 430;
+    }
     fillLinkSharingFields();
 }
 
@@ -85,6 +118,9 @@ function hideLinkSharingFields() {
 }
 
 function pushIt() {
+    if (mWebSocketConnected == false) {
+        return;
+    }
     var link = document.getElementById("link").getAttribute("hidden") == null ? document.getElementById("link").value : "";
     var title = document.getElementById("title").value;
     var message = document.getElementById("message").value;
@@ -112,7 +148,7 @@ function pushIt() {
             items: listItems
         }, function(err, res) {
             if (err) {
-                throw err;
+                showError(err);
             } else {
                 safari.extension.popovers[0].hide();
             }
@@ -125,9 +161,10 @@ function pushIt() {
             items: listItems
         }, function(err, res) {
             if (err) {
-                throw err;
+                showError(err);
             } else {
                 safari.extension.popovers[0].hide();
+                hideErrorLabel();
             }
         });
     }
@@ -168,16 +205,28 @@ function changePushType(element_) {
         document.getElementById("message").setAttribute("placeholder", "Message");
         if (mPushType == "note") {
             document.getElementById("link").setAttribute("hidden", "false");
-            safari.self.height = 399;
+            if (mHasError) {
+                safari.self.height = 399 + CHANGE_IN_SIZE;
+            } else {
+                safari.self.height = 399;
+            }
             hideLinkSharingFields();
         } else if (mPushType == "link") {
             document.getElementById("link").removeAttribute("hidden");
-            safari.self.height = 430;
+            if (mHasError) {
+                safari.self.height = 430 + CHANGE_IN_SIZE;
+            } else {
+                safari.self.height = 430;
+            }
             fillLinkSharingFields();
         } else if (mPushType == "list") {
             document.getElementById("link").setAttribute("hidden", "false");
             document.getElementById("message").setAttribute("placeholder", "Start every list item with * (asterisk)");
-            safari.self.height = 399;
+            if (mHasError) {
+                safari.self.height = 399 + CHANGE_IN_SIZE;
+            } else {
+                safari.self.height = 399;
+            }
             hideLinkSharingFields();
         }
     }
@@ -191,7 +240,11 @@ function showPushArea() {
 function hidePushArea() {
     document.getElementById("pushArea").setAttribute("hidden", "true");
     document.getElementById("push_list").removeAttribute("hidden");
-    safari.self.height = 474;
+    if (mHasError) {
+        safari.self.height = 474 + CHANGE_IN_SIZE;
+    } else {
+        safari.self.height = 474;
+    }
 }
 
 function removePush(maybe) {
@@ -314,7 +367,7 @@ function fillOutPushList() {
     PushBullet.APIKey = mAPIKey;
     PushBullet.pushHistory(function(err, res) {
         if (err) {
-            throw err;
+            showError(err);
         } else {
             document.getElementById("push_list").innerHTML = "";
             var pushes = res.pushes.reverse();
@@ -323,6 +376,7 @@ function fillOutPushList() {
                     addPushToList(pushes[i]);
                 }
             }
+            hideErrorLabel();
         }
     });
 }
@@ -360,7 +414,7 @@ function notify(title, body, tag) {
             PushBullet.APIKey = mAPIKey;
             PushBullet.pushHistory(function(err, res) {
                 if (err) {
-                    throw err;
+                    showError(err);
                 } else {
                     var pushes = res.pushes.reverse();
                     for (var i = pushes.length - 1; i >= 0; i--) {
@@ -391,7 +445,7 @@ function getLatestPush() {
     PushBullet.APIKey = mAPIKey;
     PushBullet.pushHistory(mLastPushTime, function(err, res) {
         if (err) {
-            throw err;
+            showError(err);
         } else {
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
@@ -413,6 +467,7 @@ function getLatestPush() {
                     }
                     notify(title, notification, pushes[i].iden);
                 }
+                hideErrorLabel();
             }
             mLastPushTime = pushes[pushes.length - 1].modified;
         }
@@ -428,9 +483,10 @@ function getContacts() {
     PushBullet.APIKey = mAPIKey;
     PushBullet.contacts(function(error, res) {
         if (error) {
-            throw error;
+            showError(error);
         } else {
             mContacts = res.contacts;
+            hideErrorLabel();
         }
     });
 }
@@ -450,10 +506,11 @@ function setUpPushStream() {
     getContacts();
     PushBullet.pushHistory(function(err, res) {
         if (err) {
-            throw err;
+            showError(err);
         } else {
             var pushes = res.pushes.reverse();
             mLastPushTime = pushes[pushes.length - 1].modified;
+            hideErrorLabel();
         }
     });
     wsUri = wsUriTemplate + mAPIKey;

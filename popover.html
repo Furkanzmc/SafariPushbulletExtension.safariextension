@@ -9,6 +9,9 @@
         <div id = "logo"></div>
     </header>
     <body>
+        <div style="text-align: center; height: 1px;" id="error_container" hidden>
+        <label style="color: red;" id="error_label">{{error}}</label>
+        </div>
         <div id="pushArea">
         <select id="combobox" onchange="getPushTarget(this)"></select>
         <input type="text" placeholder = "Title" id="title" value="" class="text_input">
