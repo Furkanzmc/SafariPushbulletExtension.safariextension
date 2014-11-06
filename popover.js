@@ -10,6 +10,7 @@ var mAPIKey = "";
 var mLastPushTime = null;
 var mUser = null;
 var mContacts = null;
+var mWebSocketConnected = false;
 
 function settingChanged(event) {
     mAPIKey = event.newValue;
@@ -30,10 +31,10 @@ function getUser() {
 }
 
 function popoverHandler(event) {
+    if (mUser == null) {
+        getUser();
+    };
     safari.self.height = 430;
-    getUser();
-    setUpPushStream();
-    testWebSocket();
     mPushType = "link";
     mAPIKey = safari.extension.settings.api_key
     PushBullet.APIKey = mAPIKey;
@@ -221,6 +222,14 @@ function getContactName(contactEmail) {
     };
 }
 
+function capitaliseFirstLetter(string) {
+    console.log("Capitalise - " + string);
+    if (string == null || string.length == 0) {
+        return 0;
+    };
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function addPushToList(pushObject) {
     // <img class="profile-pic" src="{{profile_pic}}"> \
     var templateHTML = '<div class="push" id="{{push_iden}}"><div class="inner-panel"> \
@@ -261,7 +270,11 @@ function addPushToList(pushObject) {
     if (pushObject.title == null && pushObject.file_name != null) {
         temp = temp.replace("{{push_title}}", pushObject.file_name);
     } else {
-        temp = temp.replace("{{push_title}}", pushObject.title == null ? "" : pushObject.title);
+        var title = pushObject.title;
+        if (title == null || title == "") {
+            title = capitaliseFirstLetter(pushObject.type)
+        };
+        temp = temp.replace("{{push_title}}", title);
     }
     temp = temp.replace("{{push_message}}", pushObject.body == null ? "" : pushObject.body);
     //Check to see if a file is present
@@ -387,7 +400,11 @@ function getLatestPush() {
                     } else if (pushes[i].body != null && pushes[i].url != null) {
                         notification = pushes[i].body + "\n" + pushes[i].url;
                     }
-                    notify(pushes[i].title, notification, pushes[i].iden);
+                    var title = pushes[i].title;
+                    if (title == null || title == "") {
+                        title = capitaliseFirstLetter(pushObject.type)
+                    };
+                    notify(title, notification, pushes[i].iden);
                 }
             }
             mLastPushTime = pushes[pushes.length - 1].modified;
@@ -422,8 +439,12 @@ function setUpPushStream() {
 }
 
 function init() {
-    setUpPushStream();
-    testWebSocket();
+    if (mWebSocketConnected == false) {
+        setUpPushStream();
+        testWebSocket();
+        getUser();
+        mWebSocketConnected = true;
+    };
 }
 
 function testWebSocket() {
@@ -448,21 +469,24 @@ function onOpen(evt) {
 }
 
 function onClose(evt) {
-    console.log("DISCONNECTED");
+    console.log("DISCONNECTED - " + evt.data);
+    mWebSocketConnected = false;
+    init();
 }
 
 function onMessage(evt) {
     //This is where we handle the push
     var message = JSON.parse(evt.data);
-    writeToScreen(message);
+    console.log(message);
     if (message.type == "tickle" && message.subtype == "push") {
         getLatestPush();
     };
-    // websocket.close();
 }
 
 function onError(evt) {
-    writeToScreen(evt.data);
+    console.log(evt.data);
+    mWebSocketConnected = false;
+    init();
 }
 
 function doSend(message) {
