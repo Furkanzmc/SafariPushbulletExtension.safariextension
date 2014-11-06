@@ -31,7 +31,7 @@ function getUser() {
 }
 
 function popoverHandler(event) {
-    if (mUser === null) {
+    if (mUser == null) {
         getUser();
     }
     safari.self.height = 430;
@@ -46,8 +46,8 @@ function popoverHandler(event) {
             throw err;
         } else {
             for (var i = res.devices.length - 1; i >= 0; i--) {
-                if (res.devices[i].active === true) {
-                    if (i === 0) {
+                if (res.devices[i].active == true) {
+                    if (i == 0) {
                         mPushTarget = res.devices[i].iden;
                     }
                     document.getElementById("combobox").innerHTML += "<option iden=\"" + res.devices[i].iden + "\" value=\"" + res.devices[i].iden + "\">" + res.devices[i].nickname + "</option>";
@@ -62,7 +62,7 @@ function popoverHandler(event) {
             throw err;
         } else {
             for (var i = res.contacts.length - 1; i >= 0; i--) {
-                if (res.contacts[i].active === true) {
+                if (res.contacts[i].active == true) {
                     document.getElementById("combobox").innerHTML += "<option email=\"" + res.contacts[i].email + "\" value=\"" + res.contacts[i].iden + "\">" + res.contacts[i].name +
                         " - " + res.contacts[i].email + "</option>";
                 }
@@ -91,7 +91,7 @@ function hideLinkSharingFields() {
 }
 
 function pushIt() {
-    var link = document.getElementById("link").getAttribute("hidden") === null ? document.getElementById("link").value : "";
+    var link = document.getElementById("link").getAttribute("hidden") == null ? document.getElementById("link").value : "";
     var title = document.getElementById("title").value;
     var message = document.getElementById("message").value;
 
@@ -99,7 +99,7 @@ function pushIt() {
     document.getElementById("title").setAttribute('value', "");
     document.getElementById("message").setAttribute('value', "");
 
-    if (link === "" || link === null) {
+    if (link == "" || link == null) {
         mPushType = "note";
     }
 
@@ -144,10 +144,10 @@ function getPushTarget(child) {
     var value = child.value;
     //Determine if we're dealing with a contact or device
     for (var i = child.children.length - 1; i >= 0; i--) {
-        if (child.children[i].getAttribute("value") == value && child.children[i].getAttribute("email") !== null) {
+        if (child.children[i].getAttribute("value") == value && child.children[i].getAttribute("email") != null) {
             mPushTarget = child.children[i].getAttribute("email");
             mIsDevice = false;
-        } else if (child.children[i].getAttribute("value") == value && child.children[i].getAttribute("iden") !== null) {
+        } else if (child.children[i].getAttribute("value") == value && child.children[i].getAttribute("iden") != null) {
             mPushTarget = child.children[i].getAttribute("iden");
             mIsDevice = true;
         }
@@ -212,11 +212,11 @@ function getContactName(contactEmail) {
     if (contactEmail == mUser.email) {
         return "yourself";
     }
-    if (mContacts === null) {
+    if (mContacts == null) {
         getContacts();
     }
     for (var i = 0; i < mContacts.length; i++) {
-        if (mContacts[i].active === false) {
+        if (mContacts[i].active == false) {
             continue;
         }
         if (mContacts[i].email == contactEmail) {
@@ -227,7 +227,7 @@ function getContactName(contactEmail) {
 
 function capitaliseFirstLetter(string) {
     console.log("Capitalise - " + string);
-    if (string === null || string.length === 0) {
+    if (string == null || string.length == 0) {
         return 0;
     }
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -253,7 +253,7 @@ function addPushToList(pushObject) {
 
     var list = "";
     //If the incoming push is a list add the check boxes
-    if (pushObject.items !== null) {
+    if (pushObject.type == "list") {
         var listTemplate = '<label><input type="checkbox" value="checked" id="squaredThree" name="check" {{is_checked}}/>{{item_text}}</label>\ ';
         var items = pushObject.items.reverse();
         for (var i = items.length - 1; i >= 0; i--) {
@@ -270,39 +270,45 @@ function addPushToList(pushObject) {
     temp = temp.replace("{{push_iden}}", pushObject.iden);
     temp = temp.replace("{{sender_name}}", pushObject.sender_name == mUser.name ? "You" : pushObject.sender_name);
     temp = temp.replace("{{receiver_name}}", getContactName(pushObject.receiver_email));
-    if (pushObject.title === null && pushObject.file_name !== null) {
+    if (pushObject.title == null && pushObject.file_name != null) {
         temp = temp.replace("{{push_title}}", pushObject.file_name);
     } else {
         var title = pushObject.title;
-        if (title === null || title === "") {
+        if (title == null || title == "") {
             title = capitaliseFirstLetter(pushObject.type);
         }
         temp = temp.replace("{{push_title}}", title);
     }
-    temp = temp.replace("{{push_message}}", pushObject.body === null ? "" : pushObject.body);
+    var pushBody = pushObject.body;
+    if (pushBody == null) {
+        pushBody = "";
+    }
+    temp = temp.replace("{{push_message}}", pushBody);
     //Check to see if a file is present
     var urlPart = '<div class="text"><a href="{{push_url}}" target="_blank" onclick="openLink(this)">{{push_url_text}}</a></div>';
 
     //If no URL exists set the url an empty string so no url shows up
     var url = "";
     var urlText = "";
-    if (pushObject.file_url !== null) {
-        url = pushObject.file_url;
-        urlText = "Download Here";
-    } else if (pushObject.url !== null) {
+    if (pushObject.type == "link") {
         url = pushObject.url;
         urlText = pushObject.url;
     }
-    urlPart = urlPart.replace("{{push_url}}", url);
-    temp = temp.replace('{{url_part}}', urlPart.replace("{{push_url_text}}", urlText));
 
     //If the incoming push is a file add the necessary fields
-    var style = '<div id="img_container"><img src="{{file_url}}"/></div>';
-    if (pushObject.file_type !== null && pushObject.file_type.search("image") >= 0) {
-        temp = temp.replace("{{background_style}}", pushObject.file_url === null ? "" : style.replace('{{file_url}}', pushObject.file_url));
+    if (pushObject.type == "file") {
+        urlText = "Download Here";
+        url = pushObject.file_url;
+        var style = '<div id="img_container"><img src="{{file_url}}"/></div>';
+        if (pushObject.file_type != null && pushObject.file_type.search("image") >= 0) {
+            temp = temp.replace("{{background_style}}", pushObject.file_url == null ? "" : style.replace('{{file_url}}', pushObject.file_url));
+        }
     } else {
         temp = temp.replace("{{background_style}}", "");
     }
+
+    urlPart = urlPart.replace("{{push_url}}", url);
+    temp = temp.replace('{{url_part}}', urlPart.replace("{{push_url_text}}", urlText));
     document.getElementById("push_list").innerHTML += temp;
 }
 
@@ -336,14 +342,14 @@ function notify(title, body, tag) {
     // log current permission level
     // console.log(Notification.permission);
     // if the user has not been asked to grant or deny notifications from this domain
-    if (Notification.permission === 'default') {
+    if (Notification.permission == 'default') {
         Notification.requestPermission(function() {
             // callback this function once a permission level has been set
             notify();
         });
     }
     // if the user has granted permission for this domain to send notifications
-    else if (Notification.permission === 'granted') {
+    else if (Notification.permission == 'granted') {
         var n = new Notification(
             title, {
                 'body': body,
@@ -376,7 +382,7 @@ function notify(title, body, tag) {
         };
     }
     // if the user does not want notifications to come from this domain
-    else if (Notification.permission === 'denied') {
+    else if (Notification.permission == 'denied') {
         // be silent
         return;
     }
@@ -396,15 +402,15 @@ function getLatestPush() {
                         continue;
                     }
                     var notification = "";
-                    if (pushes[i].body === null) {
+                    if (pushes[i].body == null) {
                         notification = pushes[i].url;
-                    } else if (pushes[i].url === null) {
+                    } else if (pushes[i].url == null) {
                         notification = pushes[i].body;
-                    } else if (pushes[i].body !== null && pushes[i].url !== null) {
+                    } else if (pushes[i].body != null && pushes[i].url != null) {
                         notification = pushes[i].body + "\n" + pushes[i].url;
                     }
                     var title = pushes[i].title;
-                    if (title === null || title === "") {
+                    if (title == null || title == "") {
                         title = capitaliseFirstLetter(pushObject.type);
                     }
                     notify(title, notification, pushes[i].iden);
@@ -432,7 +438,7 @@ function getContacts() {
 }
 
 function init() {
-    if (mWebSocketConnected === false) {
+    if (mWebSocketConnected == false) {
         setUpPushStream();
         testWebSocket();
         getUser();
