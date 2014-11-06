@@ -129,7 +129,7 @@ function pushIt() {
     document.getElementById("title").setAttribute('value', "");
     document.getElementById("message").setAttribute('value', "");
 
-    if (link == "" || link == null) {
+    if ((link == "" || link == null) && mPushType != "list") {
         mPushType = "note";
     }
 
