@@ -43,25 +43,7 @@ function getUser() {
     mUser = PushBullet.user();
 }
 
-function popoverHandler(event) {
-    if (mWebSocketConnected == false) {
-        init();
-        return;
-    }
-    if (mUser == null) {
-        getUser();
-    }
-    if (mHasError) {
-        safari.self.height = 430 + CHANGE_IN_SIZE;
-    } else {
-        safari.self.height = 430;
-    }
-    mPushType = "link";
-    mAPIKey = safari.extension.settings.api_key;
-    PushBullet.APIKey = mAPIKey;
-    //Fill out the devices
-    document.getElementById("combobox").innerHTML = "";
-    document.getElementById("message").value = "";
+function fillOutPushTargets() {
     PushBullet.devices(function(err, res) {
         if (err) {
             showError(err);
@@ -93,6 +75,28 @@ function popoverHandler(event) {
             hideErrorLabel();
         }
     });
+}
+
+function popoverHandler(event) {
+    if (mWebSocketConnected == false) {
+        init();
+        return;
+    }
+    if (mUser == null) {
+        getUser();
+    }
+    if (mHasError) {
+        safari.self.height = 430 + CHANGE_IN_SIZE;
+    } else {
+        safari.self.height = 430;
+    }
+    mPushType = "link";
+    mAPIKey = safari.extension.settings.api_key;
+    PushBullet.APIKey = mAPIKey;
+    //Fill out the devices
+    document.getElementById("combobox").innerHTML = "";
+    document.getElementById("message").value = "";
+    fillOutPushTargets();
     showPushArea();
     document.getElementById("link").removeAttribute("hidden");
     if (mHasError) {
