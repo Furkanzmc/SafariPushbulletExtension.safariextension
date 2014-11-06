@@ -212,6 +212,9 @@ function getContactName(contactEmail) {
     if (contactEmail == mUser.email) {
         return "yourself";
     }
+    if (mContacts === null) {
+        getContacts();
+    }
     for (var i = 0; i < mContacts.length; i++) {
         if (mContacts[i].active === false) {
             continue;
@@ -417,8 +420,7 @@ function getLatestPush() {
 var wsUriTemplate = "wss://stream.pushbullet.com/websocket/";
 var wsUri = null;
 
-function setUpPushStream() {
-    mAPIKey = safari.extension.settings.api_key;
+function getContacts() {
     PushBullet.APIKey = mAPIKey;
     PushBullet.contacts(function(error, res) {
         if (error) {
@@ -427,15 +429,6 @@ function setUpPushStream() {
             mContacts = res.contacts;
         }
     });
-    PushBullet.pushHistory(function(err, res) {
-        if (err) {
-            throw err;
-        } else {
-            var pushes = res.pushes.reverse();
-            mLastPushTime = pushes[pushes.length - 1].modified;
-        }
-    });
-    wsUri = wsUriTemplate + mAPIKey;
 }
 
 function init() {
@@ -445,6 +438,21 @@ function init() {
         getUser();
         mWebSocketConnected = true;
     }
+}
+
+function setUpPushStream() {
+    mAPIKey = safari.extension.settings.api_key;
+    PushBullet.APIKey = mAPIKey;
+    getContacts();
+    PushBullet.pushHistory(function(err, res) {
+        if (err) {
+            throw err;
+        } else {
+            var pushes = res.pushes.reverse();
+            mLastPushTime = pushes[pushes.length - 1].modified;
+        }
+    });
+    wsUri = wsUriTemplate + mAPIKey;
 }
 
 function testWebSocket() {
