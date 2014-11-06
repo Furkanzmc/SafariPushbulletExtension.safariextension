@@ -21,13 +21,7 @@ function settingChanged(event) {
 function getUser() {
     mAPIKey = safari.extension.settings.api_key;
     PushBullet.APIKey = mAPIKey;
-    PushBullet.user(function(err, res) {
-        if (err) {
-            throw err;
-        } else {
-            mUser = res;
-        }
-    });
+    mUser = PushBullet.user();
 }
 
 function popoverHandler(event) {
@@ -208,8 +202,12 @@ function removePush(maybe) {
     document.getElementById("push_list").childNodes[pushID].remove();
 }
 
-function getContactName(contactEmail) {
+function getContactName(contactEmail, senderEmail) {
+    senderEmail = senderEmail || null;
     if (contactEmail == mUser.email) {
+        if (senderEmail != mUser.email) {
+            return "you";
+        }
         return "yourself";
     }
     if (mContacts == null) {
@@ -269,7 +267,7 @@ function addPushToList(pushObject) {
     temp = temp.replace("{{push_iden}}", pushObject.iden);
     temp = temp.replace("{{push_iden}}", pushObject.iden);
     temp = temp.replace("{{sender_name}}", pushObject.sender_name == mUser.name ? "You" : pushObject.sender_name);
-    temp = temp.replace("{{receiver_name}}", getContactName(pushObject.receiver_email));
+    temp = temp.replace("{{receiver_name}}", getContactName(pushObject.receiver_email, pushObject.sender_email));
     if (pushObject.title == null && pushObject.file_name != null) {
         temp = temp.replace("{{push_title}}", pushObject.file_name);
     } else {
