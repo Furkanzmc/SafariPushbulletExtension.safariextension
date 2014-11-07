@@ -17,7 +17,15 @@ var CHANGE_IN_SIZE = 1;
 function showError(error, errorString) {
     if (mHasError == false) {
         document.getElementById("error_container").removeAttribute("hidden");
-        document.getElementById("error_label").innerText = mWebSocketConnected == false ? "Check your connection" : error.message;
+        if (error && error.message.length > 3) {
+            document.getElementById("error_label").innerText = error.message;
+            if (mWebSocketConnected == false) {
+                document.getElementById("error_label").innerText += " - Not Connected";
+            }
+        }
+        else if (mWebSocketConnected == false) {
+            document.getElementById("error_label").innerText = "Check your connection";
+        }
         if (errorString) {
             document.getElementById("error_label").innerText = errorString;
         }
