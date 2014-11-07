@@ -47,7 +47,7 @@ function getUser() {
 }
 
 function fillOutPushTargets() {
-    PushBullet.devices(function(err, res) {
+    PushBullet.devices(function (err, res) {
         if (err) {
             showError(err);
         } else {
@@ -64,7 +64,7 @@ function fillOutPushTargets() {
         }
     });
     //Fill out the contacts
-    PushBullet.contacts(function(err, res) {
+    PushBullet.contacts(function (err, res) {
         if (err) {
             showError(err);
         } else {
@@ -149,11 +149,11 @@ function pushIt() {
     }
     if (mIsDevice) {
         PushBullet.push(mPushType, mPushTarget, null, {
-            title: title,
-            url: link,
-            body: message,
-            items: listItems
-        }, function(err, res) {
+            title : title,
+            url   : link,
+            body  : message,
+            items : listItems
+        }, function (err, res) {
             if (err) {
                 showError(err);
             } else {
@@ -162,11 +162,11 @@ function pushIt() {
         });
     } else {
         PushBullet.push(mPushType, null, mPushTarget, {
-            title: title,
-            url: link,
-            body: message,
-            items: listItems
-        }, function(err, res) {
+            title : title,
+            url   : link,
+            body  : message,
+            items : listItems
+        }, function (err, res) {
             if (err) {
                 showError(err);
             } else {
@@ -304,7 +304,7 @@ function addPushToList(pushObject) {
                 <div class="title">{{push_title}}</div> \
                 <div class="text">{{push_message}}</div> \
                 {{url_part}} \
-                {{list_items}}\
+                <div id="items_div" onclick="updatePushItems(this)">{{list_items}}</div>\
                 {{background_style}}\
             </div> \
         </div> </div>\ ';
@@ -312,11 +312,13 @@ function addPushToList(pushObject) {
     var list = "";
     //If the incoming push is a list add the check boxes
     if (pushObject.type == "list") {
-        var listTemplate = '<label><input type="checkbox" value="checked" id="squaredThree" name="check" {{is_checked}}/>{{item_text}}</label>\ ';
+        var listTemplate = '<label><input pushID="{{push_iden}}" type="checkbox" id="squaredThree" {{is_checked}}/>{{item_text}}</label>\ ';
         var items = pushObject.items.reverse();
         for (var i = items.length - 1; i >= 0; i--) {
             var a = listTemplate.replace('{{item_text}}', items[i].text);
+            a = listTemplate.replace('{{item_text}}', items[i].text);
             a = a.replace('{{is_checked}}', items[i].checked ? "checked" : "");
+            a = a.replace("{{push_iden}}", pushObject.iden);
             list += a;
         }
     }
@@ -360,6 +362,8 @@ function addPushToList(pushObject) {
         var style = '<div id="img_container"><img src="{{file_url}}"/></div>';
         if (pushObject.file_type != null && pushObject.file_type.search("image") >= 0) {
             temp = temp.replace("{{background_style}}", pushObject.file_url == null ? "" : style.replace('{{file_url}}', pushObject.file_url));
+        } else {
+            temp = temp.replace("{{background_style}}", "");
         }
     } else {
         temp = temp.replace("{{background_style}}", "");
@@ -370,9 +374,24 @@ function addPushToList(pushObject) {
     document.getElementById("push_list").innerHTML += temp;
 }
 
+function updatePushItems(element) {
+    console.log(element);
+    var pushId = element.getElementsByTagName("label")[0].getElementsByTagName("input")[0].getAttribute("pushID");
+    var newItems = [];
+    var labels = element.getElementsByTagName("label");
+    for (var i = 0; i < labels.length; i++) {
+        var item = {"checked" : labels[i].getElementsByTagName("input")[0].checked, "text" : labels[i].innerText};
+        newItems[newItems.length] = item;
+    }
+    PushBullet.updatePush(pushId, newItems, true, function (err2, res2) {
+        console.log(res2);
+    });
+    console.log(newItems);
+}
+
 function fillOutPushList() {
     PushBullet.APIKey = mAPIKey;
-    PushBullet.pushHistory(function(err, res) {
+    PushBullet.pushHistory(function (err, res) {
         if (err) {
             showError(err);
         } else {
@@ -402,7 +421,7 @@ function notify(title, body, tag) {
     // console.log(Notification.permission);
     // if the user has not been asked to grant or deny notifications from this domain
     if (Notification.permission == 'default') {
-        Notification.requestPermission(function() {
+        Notification.requestPermission(function () {
             // callback this function once a permission level has been set
             notify();
         });
@@ -411,15 +430,15 @@ function notify(title, body, tag) {
     else if (Notification.permission == 'granted') {
         var n = new Notification(
             title, {
-                'body': body,
+                'body' : body,
                 // prevent duplicate notifications
-                'tag': tag
+                'tag'  : tag
             }
         );
         // remove the notification from Notification Center when it is clicked
-        n.onclick = function() {
+        n.onclick = function () {
             PushBullet.APIKey = mAPIKey;
-            PushBullet.pushHistory(function(err, res) {
+            PushBullet.pushHistory(function (err, res) {
                 if (err) {
                     showError(err);
                 } else {
@@ -436,7 +455,7 @@ function notify(title, body, tag) {
             });
         };
         // callback function when the notification is closed
-        n.onclose = function() {
+        n.onclose = function () {
             console.log('Notification closed');
         };
     }
@@ -450,7 +469,7 @@ function notify(title, body, tag) {
 function getLatestPush() {
     mAPIKey = safari.extension.settings.api_key;
     PushBullet.APIKey = mAPIKey;
-    PushBullet.pushHistory(mLastPushTime, function(err, res) {
+    PushBullet.pushHistory(mLastPushTime, function (err, res) {
         if (err) {
             showError(err);
         } else {
@@ -482,13 +501,12 @@ function getLatestPush() {
 }
 
 
-
 var wsUriTemplate = "wss://stream.pushbullet.com/websocket/";
 var wsUri = null;
 
 function getContacts() {
     PushBullet.APIKey = mAPIKey;
-    PushBullet.contacts(function(error, res) {
+    PushBullet.contacts(function (error, res) {
         if (error) {
             showError(error);
         } else {
@@ -512,7 +530,7 @@ function setUpPushStream() {
     mAPIKey = safari.extension.settings.api_key;
     PushBullet.APIKey = mAPIKey;
     getContacts();
-    PushBullet.pushHistory(function(err, res) {
+    PushBullet.pushHistory(function (err, res) {
         if (err) {
             showError(err);
         } else {
@@ -526,16 +544,16 @@ function setUpPushStream() {
 
 function testWebSocket() {
     websocket = new WebSocket(wsUri);
-    websocket.onopen = function(evt) {
+    websocket.onopen = function (evt) {
         onOpen(evt);
     };
-    websocket.onclose = function(evt) {
+    websocket.onclose = function (evt) {
         onClose(evt);
     };
-    websocket.onmessage = function(evt) {
+    websocket.onmessage = function (evt) {
         onMessage(evt);
     };
-    websocket.onerror = function(evt) {
+    websocket.onerror = function (evt) {
         onError(evt);
     };
 }
