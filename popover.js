@@ -14,10 +14,13 @@ var mWebSocketConnected = false;
 var mHasError = false;
 var CHANGE_IN_SIZE = 1;
 
-function showError(error) {
+function showError(error, errorString) {
     if (mHasError == false) {
         document.getElementById("error_container").removeAttribute("hidden");
         document.getElementById("error_label").innerText = mWebSocketConnected == false ? "Check your connection" : error.message;
+        if (errorString) {
+            document.getElementById("error_label").innerText = errorString;
+        }
         mHasError = true;
         safari.self.height += CHANGE_IN_SIZE;
     }
@@ -500,6 +503,7 @@ function init() {
         setUpPushStream();
         testWebSocket();
         getUser();
+        fillOutPushTargets();
         mWebSocketConnected = true;
     }
 }
@@ -544,7 +548,6 @@ function onOpen(evt) {
 function onClose(evt) {
     console.log("DISCONNECTED - " + evt.data);
     mWebSocketConnected = false;
-    init();
 }
 
 function onMessage(evt) {
@@ -559,7 +562,7 @@ function onMessage(evt) {
 function onError(evt) {
     console.log(evt.data);
     mWebSocketConnected = false;
-    init();
+    showError(null, evt.data);
 }
 
 function doSend(message) {
