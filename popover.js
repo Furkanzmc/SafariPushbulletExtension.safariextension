@@ -19,11 +19,11 @@ function showError(error, errorString) {
         document.getElementById("error_container").removeAttribute("hidden");
         if (error && error.message.length > 3) {
             document.getElementById("error_label").innerText = error.message;
-            if (mWebSocketConnected == false) {
-                document.getElementById("error_label").innerText += " - Not Connected";
+            if (navigator.onLine == false) {
+                document.getElementById("error_label").innerText += " - Check your connection";
             }
         }
-        else if (mWebSocketConnected == false) {
+        else if (navigator.onLine == false) {
             document.getElementById("error_label").innerText = "Check your connection";
         }
         if (errorString) {
