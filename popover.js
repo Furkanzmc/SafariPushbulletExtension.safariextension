@@ -438,7 +438,7 @@ function notify(title, body, tag) {
     else if (Notification.permission == 'granted') {
         var n = new Notification(
             title, {
-                'body' : body,
+                'body' : body == undefined ? "" : body,
                 // prevent duplicate notifications
                 'tag'  : tag
             }
@@ -484,9 +484,6 @@ function getLatestPush() {
             var pushes = res.pushes.reverse();
             for (var i = pushes.length - 1; i >= 0; i--) {
                 if (pushes[i].active) {
-                    if (pushes[i].sender_email == mUser.email) {
-                        continue;
-                    }
                     var notification = "";
                     if (pushes[i].body == null) {
                         notification = pushes[i].url;
@@ -497,7 +494,7 @@ function getLatestPush() {
                     }
                     var title = pushes[i].title;
                     if (title == null || title == "") {
-                        title = capitaliseFirstLetter(pushObject.type);
+                        title = capitaliseFirstLetter(pushes[i].type);
                     }
                     notify(title, notification, pushes[i].iden);
                 }
